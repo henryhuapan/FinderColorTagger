@@ -9,12 +9,10 @@ A tiny floating macOS utility for toggling the current Finder selection between 
 - Reattaches after sleep, wake, unlock, screen changes, and Space changes.
 - Uses a Finder tracking loop that only moves the panel when its target frame changes.
 - Falls back to the top center of the screen when no Finder window is open.
-- Lets you drag the panel around from its background.
 - Toggles Finder color tags for the items currently selected in Finder.
 - Pressing a button once applies that color; pressing it again on an item already using that color removes the label.
 - Switching between Red, Orange, and Green preserves any non-color Finder tags.
 - Supports Command-Q to quit.
-- Includes the custom ColorTagger app icon.
 - Runs as an accessory app, so it does not take over your Dock.
 
 ## Build
