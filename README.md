@@ -1,3 +1,5 @@
+<img width="268" height="76" alt="Screenshot 2026-09-22 at 1 51 44 PM" src="https://github.com/user-attachments/assets/d8bc4908-a8d1-4047-94f4-c468676098fa" />
+
 # Finder Color Tagger
 
 A tiny floating macOS utility for toggling the current Finder selection between Red, Orange, Green, and no label.
