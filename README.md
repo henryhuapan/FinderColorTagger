@@ -1,12 +1,12 @@
-<img width="309" height="45" alt="Screenshot 2026-09-24 at 5 14 01 PM" src="https://github.com/user-attachments/assets/38a0975f-53ad-40e3-b48d-1dbd847bb10b" />
-
 # Finder Color Tagger
+
+Version 1.01
 
 A tiny floating macOS utility for applying or removing Red, Orange, Green, and Purple tags from the current Finder selection.
 
 ## What it does
 
-- Shows a compact floating panel centered along the front Finder window title bar.
+- Shows a compact glass-style floating panel centered along the front Finder window title bar.
 - Only appears while Finder is the active app.
 - Toggles Finder color tags for the items currently selected in Finder.
 - Pressing a button once applies that color; pressing it again on an item already using that color removes the label.
@@ -14,7 +14,6 @@ A tiny floating macOS utility for applying or removing Red, Orange, Green, and P
 - Switching between Red, Orange, Green, and Purple preserves any non-color Finder tags.
 - Supports Command-Q to quit.
 - Runs as an accessory app, so it does not take over your Dock.
-
 ## Build
 
 Open Terminal in this folder and run:

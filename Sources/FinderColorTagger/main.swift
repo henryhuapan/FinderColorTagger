@@ -1,4 +1,5 @@
 import AppKit
+import CoreGraphics
 import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -73,7 +74,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         finderTrackingTimer?.invalidate()
         let timer = Timer(timeInterval: 0.30, repeats: true) { [weak self] _ in
             self?.updateVisibilityForFrontmostApplication()
-            self?.attachPanelToFinderTitleBar()
         }
         RunLoop.main.add(timer, forMode: .common)
         finderTrackingTimer = timer
@@ -81,11 +81,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func attachPanelToFinderTitleBar() {
-        guard let panel, panel.isVisible else { return }
+        guard let panel else { return }
 
         do {
             guard let finderWindow = try FinderWindowReader.frontWindow() else {
                 applyPanelFrame(topCenteredFrame(size: panel.frame.size))
+                panel.orderFrontRegardless()
+                return
+            }
+
+            guard !FinderWindowReader.hasBlockingWindow(above: finderWindow) else {
+                panel.orderOut(nil)
                 return
             }
 
@@ -94,8 +100,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 panelSize: panel.frame.size
             )
             applyPanelFrame(frame)
+            panel.orderFrontRegardless()
         } catch {
             applyPanelFrame(topCenteredFrame(size: panel.frame.size))
+            panel.orderFrontRegardless()
         }
     }
 
@@ -136,12 +144,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         if frontmostBundleIdentifier == finderBundleIdentifier {
             lastExternalAppWasFinder = true
-            panel.orderFrontRegardless()
+            attachPanelToFinderTitleBar()
             return
         }
 
         if frontmostBundleIdentifier == thisBundleIdentifier, lastExternalAppWasFinder {
-            panel.orderFrontRegardless()
+            attachPanelToFinderTitleBar()
             return
         }
 
@@ -186,7 +194,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func refreshPanelAttachment() {
         reassertPanelWindowSettings()
         updateVisibilityForFrontmostApplication()
-        attachPanelToFinderTitleBar()
     }
 
     private func reassertPanelWindowSettings() {
@@ -452,6 +459,8 @@ struct FinderWindowInfo {
 }
 
 enum FinderWindowReader {
+    private static let finderBundleIdentifier = "com.apple.finder"
+
     static func frontWindow() throws -> FinderWindowInfo? {
         let source = """
         tell application "Finder"
@@ -493,6 +502,70 @@ enum FinderWindowReader {
             title: title,
             bounds: CGRect(x: left, y: top, width: right - left, height: bottom - top)
         )
+    }
+
+    static func hasBlockingWindow(above finderWindow: FinderWindowInfo) -> Bool {
+        guard let finder = NSRunningApplication.runningApplications(
+            withBundleIdentifier: finderBundleIdentifier
+        ).first else {
+            return false
+        }
+
+        let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
+        guard let windows = CGWindowListCopyWindowInfo(options, kCGNullWindowID)
+            as? [[String: Any]] else {
+            return false
+        }
+
+        for window in windows {
+            guard numberValue(in: window, key: kCGWindowOwnerPID)?.int32Value == finder.processIdentifier,
+                  (numberValue(in: window, key: kCGWindowAlpha)?.doubleValue ?? 0) > 0,
+                  let bounds = windowBounds(from: window),
+                  bounds.width >= 160,
+                  bounds.height >= 80 else {
+                continue
+            }
+
+            if framesAreEffectivelyEqual(bounds, finderWindow.bounds) {
+                return false
+            }
+
+            return true
+        }
+
+        return false
+    }
+
+    private static func numberValue(
+        in window: [String: Any],
+        key: CFString
+    ) -> NSNumber? {
+        window[key as String] as? NSNumber
+    }
+
+    private static func windowBounds(from window: [String: Any]) -> CGRect? {
+        guard let values = window[kCGWindowBounds as String] as? [String: Any],
+              let x = values["X"] as? NSNumber,
+              let y = values["Y"] as? NSNumber,
+              let width = values["Width"] as? NSNumber,
+              let height = values["Height"] as? NSNumber else {
+            return nil
+        }
+
+        return CGRect(
+            x: CGFloat(x.doubleValue),
+            y: CGFloat(y.doubleValue),
+            width: CGFloat(width.doubleValue),
+            height: CGFloat(height.doubleValue)
+        )
+    }
+
+    private static func framesAreEffectivelyEqual(_ lhs: CGRect, _ rhs: CGRect) -> Bool {
+        let tolerance: CGFloat = 8
+        return abs(lhs.minX - rhs.minX) <= tolerance &&
+            abs(lhs.minY - rhs.minY) <= tolerance &&
+            abs(lhs.width - rhs.width) <= tolerance &&
+            abs(lhs.height - rhs.height) <= tolerance
     }
 }
 
