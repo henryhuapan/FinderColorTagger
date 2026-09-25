@@ -1,3 +1,5 @@
+<img width="312" height="49" alt="Screenshot 2026-09-24 at 5 27 13 PM" src="https://github.com/user-attachments/assets/7f2b1ba7-6b8e-4f93-ba73-61d3c3f98cb1" />
+
 # Finder Color Tagger
 
 Version 1.01
