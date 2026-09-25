@@ -20,6 +20,8 @@
     <string>1</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
+    <key>LSUIElement</key>
+    <true/>
     <key>NSAppleEventsUsageDescription</key>
     <string>Finder Color Tagger needs permission to apply color labels to the Finder items you select.</string>
     <key>NSHighResolutionCapable</key>

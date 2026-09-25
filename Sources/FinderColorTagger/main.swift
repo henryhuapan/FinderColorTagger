@@ -1,17 +1,6 @@
 import AppKit
 import SwiftUI
 
-@main
-struct FinderColorTaggerApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-
-    var body: some Scene {
-        Settings {
-            EmptyView()
-        }
-    }
-}
-
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var panel: NSPanel?
     private var finderTrackingTimer: Timer?
@@ -47,7 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let hostingView = NSHostingView(rootView: rootView)
         hostingView.wantsLayer = true
         hostingView.layer?.backgroundColor = NSColor.clear.cgColor
-        let panelSize = NSSize(width: 178, height: 38)
+        let panelSize = NSSize(width: 295, height: 38)
 
         let panel = FloatingPanel(
             contentRect: topCenteredFrame(size: panelSize),
@@ -284,9 +273,17 @@ struct FloatingTaggerView: View {
             TagButton(title: "Green", color: .green) {
                 toggleFinderLabel(.green)
             }
+
+            TagButton(title: "Purple", color: .purple) {
+                toggleFinderLabel(.purple)
+            }
+
+            TagButton(title: "No Color", color: .secondary, systemName: "tag.slash.fill") {
+                toggleFinderLabel(.noColor)
+            }
         }
         .padding(5)
-        .frame(width: 178, height: 38)
+        .frame(width: 295, height: 38)
         .background(GlassBackground())
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay {
@@ -310,6 +307,7 @@ struct FloatingTaggerView: View {
 struct TagButton: View {
     let title: String
     let color: Color
+    var systemName = "tag.fill"
     let action: () -> Void
 
     var body: some View {
@@ -318,7 +316,7 @@ struct TagButton: View {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(.white.opacity(0.10))
 
-                Image(systemName: "tag.fill")
+                Image(systemName: systemName)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.primary.opacity(0.82))
                     .padding(.bottom, 6)
@@ -352,10 +350,12 @@ enum FinderLabel {
     case red
     case orange
     case green
+    case purple
+    case noColor
 
     static let colorTagNames = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Gray", "Grey"]
 
-    var title: String {
+    var tagName: String? {
         switch self {
         case .red:
             return "Red"
@@ -363,6 +363,10 @@ enum FinderLabel {
             return "Orange"
         case .green:
             return "Green"
+        case .purple:
+            return "Purple"
+        case .noColor:
+            return nil
         }
     }
 }
@@ -385,11 +389,17 @@ enum FinderTagger {
         let resourceValues = try url.resourceValues(forKeys: [.tagNamesKey])
         var tags = resourceValues.tagNames ?? []
 
-        if tags.contains(label.title) {
-            tags.removeAll { $0 == label.title }
+        guard let tagName = label.tagName else {
+            tags.removeAll { FinderLabel.colorTagNames.contains($0) }
+            try (url as NSURL).setResourceValue(tags, forKey: .tagNamesKey)
+            return
+        }
+
+        if tags.contains(tagName) {
+            tags.removeAll { $0 == tagName }
         } else {
             tags.removeAll { FinderLabel.colorTagNames.contains($0) }
-            tags.append(label.title)
+            tags.append(tagName)
         }
 
         try (url as NSURL).setResourceValue(tags, forKey: .tagNamesKey)
@@ -485,3 +495,8 @@ enum FinderWindowReader {
         )
     }
 }
+
+let application = NSApplication.shared
+let applicationDelegate = AppDelegate()
+application.delegate = applicationDelegate
+application.run()
